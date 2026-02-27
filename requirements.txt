@@ -45,5 +45,7 @@ uvicorn==0.40.0
 xlsx2csv==0.8.5
 yarl==1.22.0
 alembic==1.18.3
+PyMySQL==1.1.2
+
 
 # pip install -r requirements.txt --trusted-host pypi.org --trusted-host files.pythonhosted.org 
