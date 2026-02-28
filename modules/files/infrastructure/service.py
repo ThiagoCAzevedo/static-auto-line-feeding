@@ -7,32 +7,32 @@ from .base import FilesBase
 class ListExcelFiles(FilesBase):
     def __init__(self):
         super().__init__()
-        self.log.info("Inicializando ListExcelFiles")
+        self.log.info("Initialized ListExcelFiles")
 
     def execute(self):
         path = self.get_excel_path()
-        self.log.info(f"Listando arquivos no diretório: {path}")
+        self.log.info(f"Listing files in directory: {path}")
 
         try:
             files = [f for f in listdir(path) if isfile(join(path, f))]
-            self.log.info(f"Arquivos encontrados: {len(files)}")
+            self.log.info(f"Found files: {len(files)}")
             return files
 
         except Exception:
-            self.log.error("Erro ao listar arquivos no EXCEL_PATH", exc_info=True)
+            self.log.error("Error listing files in EXCEL_PATH", exc_info=True)
             raise
 
 
 class UploadFiles(FilesBase):
     def __init__(self):
         super().__init__()
-        self.log.info("Inicializando UploadFiles")
+        self.log.info("Initialized UploadFiles")
 
     def execute(self, file):
         path = self.get_excel_path()
         target_path = f"{path}/{file.filename}"
 
-        self.log.info(f"Iniciando upload de arquivo: {file.filename}")
+        self.log.info(f"Initialized file upload: {file.filename}")
 
         try:
             content = file.file.read()
@@ -40,34 +40,34 @@ class UploadFiles(FilesBase):
             with open(target_path, "wb") as f:
                 f.write(content)
 
-            self.log.info(f"Upload concluído: {file.filename} ({len(content)} bytes)")
+            self.log.info(f"Upload completed: {file.filename} ({len(content)} bytes)")
             return {"filename": file.filename, "size": len(content)}
 
         except Exception:
-            self.log.error(f"Erro ao fazer upload do arquivo {file.filename}", exc_info=True)
+            self.log.error(f"Error uploading file {file.filename}", exc_info=True)
             raise
 
 
 class DeleteFiles(FilesBase):
     def __init__(self):
         super().__init__()
-        self.log.info("Inicializando DeleteFiles")
+        self.log.info("Initialized DeleteFiles")
 
     def execute(self, filename: str):
         path = self.get_excel_path()
         file_path = os.path.join(path, filename)
 
-        self.log.info(f"Solicitado delete do arquivo: {filename}")
+        self.log.info(f"Delete requested to file: {filename}")
 
         try:
             os.remove(file_path)
-            self.log.info(f"Arquivo removido com sucesso: {filename}")
+            self.log.info(f"File removed successfully: {filename}")
             return {"message": f"File '{filename}' succesfully removed."}
 
         except FileNotFoundError:
-            self.log.error(f"Arquivo '{filename}' não encontrado para remoção", exc_info=True)
+            self.log.error(f"File '{filename}' not found for removal", exc_info=True)
             raise
 
         except Exception:
-            self.log.error(f"Erro ao remover arquivo '{filename}'", exc_info=True)
+            self.log.error(f"Error removing file '{filename}'", exc_info=True)
             raise
