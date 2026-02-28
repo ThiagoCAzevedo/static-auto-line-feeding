@@ -1,35 +1,48 @@
-from helpers.data.cleaner import CleanerBase
-from helpers.log.logger import logger
+from .base import PKMCBase
 import polars as pl
 
 
-class PKMC_DefineDataframe(CleanerBase):
-    def __init__(self):
-        self.log = logger("static")
-        self.log.info("Inicializando PKMC_DefineDataframe")
+class PKMCDefineDataframe(PKMCBase):
+    def __init__(self, path: str):
+        super().__init__()
+        self.path = path
 
-        CleanerBase.__init__(self)
-
-    def create_df(self):
+    def create_df(self) -> pl.LazyFrame:
         self.log.info("Carregando arquivo do PKMC_PATH como LazyFrame")
-
         try:
-            df = self._load_file("PKMC_PATH").lazy()
+            df = self.load_file(self.path).lazy()
             self.log.info("LazyFrame criado com sucesso a partir do PKMC_PATH")
             return df
-
         except Exception:
             self.log.error("Erro ao carregar arquivo PKMC_PATH", exc_info=True)
             raise
-    
 
-class PKMC_Cleaner(CleanerBase):
-    def __init__(self):
-        self.log = logger("static")
-        self.log.info("Inicializando PKMC_Cleaner")
+
+class PKMCCleaner(PKMCBase):
+    def rename_columns(self, df):
+        self.log.info("Renomeando colunas conforme dicionário padrão PKMC")
         
-        CleanerBase.__init__(self)
-        
+        rename_map = {
+            "Material": "partnumber",
+            "Área abastec.prod.": "supply_area",
+            "Nº circ.regul.": "num_reg_circ",
+            "Tipo de depósito": "deposit_type",
+            "Posição no depósito": "deposit_position",
+            "Container": "container",
+            "Texto breve de material": "description",
+            "Norma de embalagem": "pack_standard",
+            "Quantidade Kanban": "qty_per_box", 
+            "Posição de armazenamento": "qty_max_box",
+        }
+
+        try:
+            df = self.rename(df, rename_map)
+            self.log.info("Renomeação concluída com sucesso")
+            return df
+        except Exception:
+            self.log.error("Erro ao renomear colunas em PKMC", exc_info=True)
+            raise
+    
     def filter_columns(self, df):
         self.log.info("Filtrando colunas: deposit_type == 'B01'")
 
@@ -37,7 +50,6 @@ class PKMC_Cleaner(CleanerBase):
             df = df.filter(pl.col("deposit_type") == "B01")
             self.log.info("Filtro aplicado com sucesso")
             return df
-
         except Exception:
             self.log.error("Erro ao filtrar colunas em PKMC", exc_info=True)
             raise
@@ -66,7 +78,6 @@ class PKMC_Cleaner(CleanerBase):
 
             self.log.info("Colunas limpas com sucesso")
             return df
-
         except Exception:
             self.log.error("Erro ao limpar colunas em PKMC", exc_info=True)
             raise
@@ -93,32 +104,6 @@ class PKMC_Cleaner(CleanerBase):
 
             self.log.info("Colunas criadas e dataframe atualizado com sucesso")
             return df
-
         except Exception:
             self.log.error("Erro ao criar colunas em PKMC", exc_info=True)
-            raise
-
-    def rename_columns(self, df):
-        self.log.info("Renomeando colunas conforme dicionário padrão PKMC")
-        
-        rename_map = {
-            "Material": "partnumber",
-            "Área abastec.prod.": "supply_area",
-            "Nº circ.regul.": "num_reg_circ",
-            "Tipo de depósito": "deposit_type",
-            "Posição no depósito": "deposit_position",
-            "Container": "container",
-            "Texto breve de material": "description",
-            "Norma de embalagem": "pack_standard",
-            "Quantidade Kanban": "qty_per_box", 
-            "Posição de armazenamento": "qty_max_box",
-        }
-
-        try:
-            df = self._rename(df, rename_map)
-            self.log.info("Renomeação concluída com sucesso")
-            return df
-
-        except Exception:
-            self.log.error("Erro ao renomear colunas em PKMC", exc_info=True)
             raise
