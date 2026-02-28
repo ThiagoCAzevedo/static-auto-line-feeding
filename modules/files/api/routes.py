@@ -1,0 +1,50 @@
+from fastapi import APIRouter, File, UploadFile
+from modules.files.application.pipeline import FilesPipeline
+from common.logger import logger
+
+
+router = APIRouter()
+log = logger("files")
+pipeline = FilesPipeline()
+
+
+@router.get("/list", summary="Get files in excel folder")
+def list_files():
+    log.info("GET /files/list — listed excel files")
+
+    try:
+        files = pipeline.list_files()
+        log.info(f"Finished listing — amount of registers: {len(files)}")
+        return files
+
+    except Exception as e:
+        log.error("Error listing excel files", exc_info=True)
+        raise
+
+
+@router.post("/upload", summary="Upload file in excel folder")
+def upload_files(file: UploadFile = File(...)):
+    log.info(f"POST /files/upload — received file: {file.filename}")
+
+    try:
+        result = pipeline.upload_file(file)
+        log.info(f"Finished file upload: {file.filename}")
+        return result
+
+    except Exception as e:
+        log.error(f"Error uploading file: {file.filename}", exc_info=True)
+        raise
+
+
+@router.delete("/delete/{filename}", summary="Delete file in excel folder")
+def delete_files(filename: str):
+    log.info(f"DELETE /files/delete — file to remove: {filename}")
+
+    try:
+        result = pipeline.delete_file(filename)
+        log.info(f"Successfully removed file: {filename}")
+        return result
+
+    except Exception as e:
+        log.error(f"Error removing file: {filename}", exc_info=True)
+        raise

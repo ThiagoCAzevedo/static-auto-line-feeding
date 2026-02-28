@@ -6,7 +6,6 @@ from database.base import Base
 class PK05(Base):
     __tablename__ = "pk05"
 
-    print(">>> PK05Model carregado COM SUCESSO")
     id = Column(Integer, primary_key=True, index=True)
     supply_area = Column(String(100), nullable=False)
     deposit = Column(String(50), nullable=False)
