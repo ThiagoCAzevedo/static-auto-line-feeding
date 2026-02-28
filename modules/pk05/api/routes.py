@@ -20,6 +20,13 @@ def get_from_db(limit: int = None, db: Session = Depends(get_db)):
     return repo.fetch_all(limit)
 
 
+@router.post("/update")
+def update(records: list[dict], db: Session = Depends(get_db)):
+    repo = PK05Repository(db)
+    total = repo.update(records)
+    return {"message": "Records updated successfully", "count": total}
+
+
 @router.post("/upsert")
 def upsert(batch_size: int = 10_000, db: Session = Depends(get_db)):
     pipeline = PK05Pipeline()

@@ -23,6 +23,32 @@ class PKMCRepository:
             self.log.error("Error fetching PKMC records", exc_info=True)
             raise
 
+    def update(self, records: list[dict]) -> int:
+        self.log.info(f"Starting PKMC update with {len(records)} records")
+        total_updated = 0
+
+        try:
+            for record in records:
+                record_id = record.pop("id", None)
+                if record_id is None:
+                    self.log.warning("Record missing 'id' field, skipping")
+                    continue
+
+                self.db.query(PKMC).filter(PKMC.id == record_id).update(
+                    record,
+                    synchronize_session=False
+                )
+                total_updated += 1
+
+            self.db.commit()
+            self.log.info(f"PKMC update completed successfully - Total records updated: {total_updated}")
+            return total_updated
+
+        except Exception as e:
+            self.log.error("Error during PKMC update", exc_info=True)
+            self.db.rollback()
+            raise
+
     def bulk_upsert(self, df, batch_size: int = 10000):
         self.log.info(f"Starting PKMC bulk upsert with batch_size={batch_size}")
         rows = df.to_dicts()
