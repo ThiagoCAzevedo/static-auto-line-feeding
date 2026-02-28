@@ -10,6 +10,19 @@ class PKMCRepository:
         self.db = db
         self.log = logger("pkmc")
 
+    def fetch_all(self, limit: int = None):
+        self.log.info("Fetching all PKMC records from database")
+        try:
+            query = self.db.query(PKMC)
+            if limit:
+                query = query.limit(limit)
+            records = query.all()
+            self.log.info(f"Retrieved {len(records)} PKMC records")
+            return [record.__dict__ for record in records]
+        except Exception:
+            self.log.error("Error fetching PKMC records", exc_info=True)
+            raise
+
     def bulk_upsert(self, df, batch_size: int = 10000):
         self.log.info(f"Starting PKMC bulk upsert with batch_size={batch_size}")
         rows = df.to_dicts()

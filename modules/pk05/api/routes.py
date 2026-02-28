@@ -12,6 +12,11 @@ def get_raw(limit: int = 50):
     df = PK05Pipeline().run().collect()
     return df.head(limit).to_dicts()
 
+@router.get("/db")
+def get_from_db(limit: int = None, db: Session = Depends(get_db)):
+    repo = PK05Repository(db)
+    return repo.fetch_all(limit)
+
 @router.post("/upsert")
 def upsert(batch_size: int = 10_000, db: Session = Depends(get_db)):
     pipeline = PK05Pipeline()
