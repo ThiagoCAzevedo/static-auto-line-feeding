@@ -1,5 +1,5 @@
-import polars as pl
 from .base import PKMCBase
+import polars as pl
 
 
 class PKMCDefineDataframe(PKMCBase):

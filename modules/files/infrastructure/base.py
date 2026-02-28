@@ -1,4 +1,3 @@
-import os
 from common.logger import logger
 from config.settings import settings
 
