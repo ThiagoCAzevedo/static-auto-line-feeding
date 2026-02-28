@@ -41,6 +41,21 @@ def get_from_db(limit: int = None, db: Session = Depends(get_db)):
         raise
 
 
+@router.post("/update", summary="Update PKMC records in database")
+def update(records: list[dict], db: Session = Depends(get_db)):
+    log.info(f"POST /pkmc/update — updating {len(records)} records")
+
+    try:
+        repo = PKMCRepository(db)
+        total = repo.update(records)
+        log.info(f"Successfully updated {total} PKMC records")
+        return {"message": "Records updated successfully", "count": total}
+
+    except Exception as e:
+        log.error("Error updating PKMC records", exc_info=True)
+        raise
+
+
 @router.post("/upsert", summary="Upsert PKMC values into the database")
 def upsert_pkmc(batch_size: int = Query(10_000, ge=1, le=100_000), db: Session = Depends(get_db)):
     log.info(f"POST /static/upsert — batch_size={batch_size}")
