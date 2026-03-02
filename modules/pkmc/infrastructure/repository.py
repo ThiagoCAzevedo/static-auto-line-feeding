@@ -29,12 +29,12 @@ class PKMCRepository:
 
         try:
             for record in records:
-                record_id = record.pop("id", None)
-                if record_id is None:
-                    self.log.warning("Record missing 'id' field, skipping")
+                partnumber_id = record.pop("partnumber", None)
+                if partnumber_id is None:
+                    self.log.warning("Record missing 'partnumber' field, skipping")
                     continue
 
-                self.db.query(PKMC).filter(PKMC.id == record_id).update(
+                self.db.query(PKMC).filter(PKMC.partnumber == partnumber_id).update(
                     record,
                     synchronize_session=False
                 )
