@@ -19,6 +19,7 @@ class PK05Pipeline:
 
             cleaner = PK05Cleaner()
             
+            print("COLUMNSSS:", lf.columns)
             lf = cleaner.rename_columns(lf)
             self.log.debug("Columns renamed")
             
