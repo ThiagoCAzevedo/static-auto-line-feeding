@@ -47,11 +47,9 @@ class PK05Cleaner(PK05Base):
 
     def create_columns(self, lf: pl.LazyFrame) -> pl.LazyFrame:
         try:
-            lf = lf.with_columns(
+            return lf.with_columns(
                 pl.col("description").str.extract(r"(T\d+)", 1).alias("takt")
             )
-            lf = lf.with_row_index(name="id")
-            return lf
         except Exception as e:
             self.log.error(f"Column creation failed: {str(e)}", exc_info=True)
             raise

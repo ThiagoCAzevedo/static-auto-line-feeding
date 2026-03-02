@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime, Float
+from sqlalchemy import Column, String, DateTime
 from sqlalchemy.sql import func
 from database.base import Base
 
@@ -6,7 +6,6 @@ from database.base import Base
 class PK05(Base):
     __tablename__ = "pk05"
 
-    id = Column(Integer, primary_key=True, index=True)
     supply_area = Column(String(100), nullable=False)
     deposit = Column(String(50), nullable=False)
     responsible = Column(String(100))

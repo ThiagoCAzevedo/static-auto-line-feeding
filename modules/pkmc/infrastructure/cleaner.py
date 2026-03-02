@@ -87,7 +87,6 @@ class PKMCCleaner(PKMCBase):
             ])
 
             df = df.drop_nulls("rack")
-            df = df.with_row_index(name="id")
 
             return df
         except Exception as e:

@@ -40,20 +40,6 @@ def get_from_db(limit: int = None, db: Session = Depends(get_db)):
         raise
 
 
-@router.post("/update", summary="Update PK05 records in database")
-def update(records: list[dict], db: Session = Depends(get_db)):
-    log.info(f"POST /pk05/update ({len(records)} records)")
-
-    try:
-        repo = PK05Repository(db)
-        total = repo.update(records)
-        return {"message": "Records updated successfully", "count": total}
-
-    except Exception as e:
-        log.error(f"Update failed: {str(e)}", exc_info=True)
-        raise
-
-
 @router.post("/upsert", summary="Upsert PK05 values into the database")
 def upsert(batch_size: int = Query(10_000, ge=1, le=100_000), db: Session = Depends(get_db)):
     log.info(f"POST /pk05/upsert (batch_size={batch_size})")

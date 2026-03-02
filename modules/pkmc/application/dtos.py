@@ -3,7 +3,6 @@ from typing import TypedDict
 
 
 class PKMC_RecordDTO(TypedDict):
-    id: int
     partnumber: str
     supply_area: str
     num_reg_circ: str

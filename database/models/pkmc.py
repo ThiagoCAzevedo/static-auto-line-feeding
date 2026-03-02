@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime, Float
+from sqlalchemy import Column, String, DateTime, Float
 from sqlalchemy.sql import func
 from database.base import Base
 
@@ -6,7 +6,6 @@ from database.base import Base
 class PKMC(Base):
     __tablename__ = "pkmc"
 
-    id = Column(Integer, primary_key=True, index=True)
     partnumber = Column(String(100), nullable=False)
     supply_area = Column(String(100), nullable=False)
     num_reg_circ = Column(String(20), nullable=False)

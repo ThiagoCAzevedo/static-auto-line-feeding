@@ -24,32 +24,6 @@ class PK05Repository:
             self.log.error(f"Failed to fetch PK05 records: {str(e)}", exc_info=True)
             raise
 
-    def update(self, records: list[dict]) -> int:
-        self.log.info(f"Updating {len(records)} PK05 records")
-        total_updated = 0
-
-        try:
-            for idx, record in enumerate(records, 1):
-                record_id = record.pop("id", None)
-                if record_id is None:
-                    self.log.warning(f"Record #{idx}: missing 'id' field, skipped")
-                    continue
-
-                self.db.query(PK05).filter(PK05.id == record_id).update(
-                    record,
-                    synchronize_session=False
-                )
-                total_updated += 1
-
-            self.db.commit()
-            self.log.info(f"PK05 update completed: {total_updated}/{len(records)} records updated")
-            return total_updated
-
-        except Exception as e:
-            self.log.error(f"PK05 update failed: {str(e)}", exc_info=True)
-            self.db.rollback()
-            raise
-
     def bulk_upsert(self, df, batch_size: int = 10000) -> int:
         rows = df.to_dicts()
         total = 0

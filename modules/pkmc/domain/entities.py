@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class PKMCRecord:
-    id: int
     partnumber: str
     supply_area: str
     deposit_type: str
