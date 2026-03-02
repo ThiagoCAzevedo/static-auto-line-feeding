@@ -1,8 +1,7 @@
-from __future__ import annotations
-from typing import TypedDict
+from pydantic import BaseModel, Field
 
 
-class PKMC_RecordDTO(TypedDict):
+class PKMCRecordDTO(BaseModel):
     partnumber: str
     supply_area: str
     num_reg_circ: str
@@ -11,10 +10,17 @@ class PKMC_RecordDTO(TypedDict):
     container: str
     description: str
     pack_standard: str
-    qty_per_box: float
-    qty_max_box: float
+    qty_per_box: float = Field(gt=0)
+    qty_max_box: float = Field(gt=0)
     total_theoretical_qty: float
     qty_for_restock: float
     rack: str
     lb_balance: float
     lb_balance_box: float
+
+    class Config:
+        from_attributes = True
+
+
+class PKMCBulkCreateDTO(BaseModel):
+    records: list[PKMCRecordDTO]

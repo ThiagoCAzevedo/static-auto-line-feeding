@@ -4,6 +4,7 @@ from modules.pk05.application.pipeline import PK05Pipeline
 from modules.pk05.infrastructure.repository import PK05Repository
 from database.session import get_db
 from common.logger import logger
+from common.response_handler import ResponseHandler
 
 
 router = APIRouter()
@@ -17,27 +18,34 @@ def get_raw(limit: int = Query(50, ge=1, le=1000)):
     try:
         pipeline = PK05Pipeline()
         df = pipeline.run().head(limit).collect()
-        count = df.height
-        log.info(f"Returned {count} cleaned PK05 records")
-        return df.to_dicts()
+        records = df.to_dicts()
+
+        return ResponseHandler.success(
+            data=records,
+            message=f"Returned {len(records)} cleaned PK05 records"
+        )
 
     except Exception as e:
         log.error(f"Failed to get clean PK05 data: {str(e)}", exc_info=True)
-        raise
+        return ResponseHandler.error(str(e))
 
 
-@router.get("/db", summary="Get all PK05 values from database")
+@router.get("/response/db", summary="Get all PK05 values from database")
 def get_from_db(limit: int = None, db: Session = Depends(get_db)):
-    log.info(f"GET /pk05/db{f' (limit={limit})' if limit else ''}")
+    log.info(f"GET /pk05/response/db{f' (limit={limit})' if limit else ''}")
 
     try:
         repo = PK05Repository(db)
         records = repo.fetch_all(limit)
-        return records
+
+        return ResponseHandler.success(
+            data=records,
+            message="Fetched PK05 values from DB"
+        )
 
     except Exception as e:
         log.error(f"Failed to fetch from database: {str(e)}", exc_info=True)
-        raise
+        return ResponseHandler.error(str(e))
 
 
 @router.post("/upsert", summary="Upsert PK05 values into the database")
@@ -47,21 +55,19 @@ def upsert(batch_size: int = Query(10_000, ge=1, le=100_000), db: Session = Depe
     try:
         pipeline = PK05Pipeline()
         df = pipeline.run().collect()
-        row_count = df.height
-        log.debug(f"Pipeline produced {row_count} rows for upsert")
 
         repo = PK05Repository(db)
         rows = repo.bulk_upsert(df, batch_size)
 
-        log.info(f"Upsert completed: {rows} rows")
-
-        return {
-            "message": "PK05 upsert completed successfully",
-            "rows": rows,
-            "batch_size": batch_size,
-            "table": "pk05",
-        }
+        return ResponseHandler.success(
+            data={
+                "rows": rows,
+                "batch_size": batch_size,
+                "table": "pk05",
+            },
+            message="PK05 upsert completed successfully"
+        )
 
     except Exception as e:
         log.error(f"Upsert operation failed: {str(e)}", exc_info=True)
-        raise
+        return ResponseHandler.error(str(e))

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, File, UploadFile
 from common.logger import logger
 from modules.files.infrastructure.service import ListExcelFiles, UploadFiles, DeleteFiles
+from common.response_handler import ResponseHandler
 
 
 router = APIRouter()
@@ -14,13 +15,15 @@ def list_files():
     try:
         service = ListExcelFiles()
         files = service.execute()
-        count = len(files)
-        log.info(f"Listed {count} files from excel directory")
-        return files
+
+        return ResponseHandler.success(
+            data=files,
+            message=f"Listed {len(files)} files from excel directory"
+        )
 
     except Exception as e:
         log.error(f"Failed to list files: {str(e)}", exc_info=True)
-        raise
+        return ResponseHandler.error(str(e))
 
 
 @router.post("/upload", summary="Upload file in excel folder")
@@ -30,23 +33,30 @@ def upload_files(file: UploadFile = File(...)):
     try:
         service = UploadFiles()
         result = service.execute(file)
-        log.info(f"File uploaded successfully: {file.filename} ({result['size']} bytes)")
-        return result
+
+        return ResponseHandler.success(
+            data=result,
+            message=f"File uploaded successfully: {file.filename}"
+        )
 
     except Exception as e:
         log.error(f"Failed to upload file {file.filename}: {str(e)}", exc_info=True)
-        raise
+        return ResponseHandler.error(str(e))
 
 
 @router.delete("/delete/{filename}", summary="Delete file in excel folder")
 def delete_files(filename: str):
+    log.info(f"DELETE /files/delete/{filename}")
 
     try:
         service = DeleteFiles()
         result = service.execute(filename)
-        log.info(f"File deleted successfully: {filename}")
-        return result
+
+        return ResponseHandler.success(
+            data=result,
+            message=f"File deleted successfully: {filename}"
+        )
 
     except Exception as e:
         log.error(f"Failed to delete file {filename}: {str(e)}", exc_info=True)
-        raise
+        return ResponseHandler.error(str(e))

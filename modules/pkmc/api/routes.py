@@ -4,6 +4,7 @@ from modules.pkmc.application.pipeline import PKMCPipeline
 from modules.pkmc.infrastructure.repository import PKMCRepository
 from database.session import get_db
 from common.logger import logger
+from common.response_handler import ResponseHandler
 
 
 router = APIRouter()
@@ -17,27 +18,34 @@ def get_clean_pkmc(limit: int = Query(50, ge=1, le=1000)):
     try:
         pipeline = PKMCPipeline()
         df = pipeline.run().head(limit).collect()
-        count = df.height
-        log.info(f"✓ Returned {count} cleaned PKMC records")
-        return df.to_dicts()
+        result = df.to_dicts()
+
+        return ResponseHandler.success(
+            data=result,
+            message=f"Returned {len(result)} cleaned PKMC records"
+        )
 
     except Exception as e:
-        log.error(f"✗ Failed to get clean PKMC data: {str(e)}", exc_info=True)
-        raise
+        log.error(f"Failed to get clean PKMC data: {str(e)}", exc_info=True)
+        return ResponseHandler.error(str(e))
 
 
-@router.get("/db", summary="Get all PKMC values from database")
+@router.get("/response/db", summary="Get all PKMC values from database")
 def get_from_db(limit: int = None, db: Session = Depends(get_db)):
-    log.info(f"GET /pkmc/db{f' (limit={limit})' if limit else ''}")
+    log.info(f"GET /pkmc/response/db{f' (limit={limit})' if limit else ''}")
 
     try:
         repo = PKMCRepository(db)
         records = repo.fetch_all(limit)
-        return records
+
+        return ResponseHandler.success(
+            data=records,
+            message="Fetched PKMC values from DB"
+        )
 
     except Exception as e:
         log.error(f"Failed to fetch from database: {str(e)}", exc_info=True)
-        raise
+        return ResponseHandler.error(str(e))
 
 
 @router.post("/upsert", summary="Upsert PKMC values into the database")
@@ -47,21 +55,19 @@ def upsert_pkmc(batch_size: int = Query(10_000, ge=1, le=100_000), db: Session =
     try:
         pipeline = PKMCPipeline()
         df = pipeline.run().collect()
-        row_count = df.height
-        log.debug(f"Pipeline produced {row_count} rows for upsert")
-
         repo = PKMCRepository(db)
+
         rows = repo.bulk_upsert(df, batch_size)
 
-        log.info(f"Upsert completed: {rows} rows")
-
-        return {
-            "message": "PKMC upsert completed successfully",
-            "rows": rows,
-            "batch_size": batch_size,
-            "table": "pkmc",
-        }
+        return ResponseHandler.success(
+            data={
+                "rows": rows,
+                "batch_size": batch_size,
+                "table": "pkmc",
+            },
+            message="PKMC upsert completed successfully"
+        )
 
     except Exception as e:
         log.error(f"Upsert operation failed: {str(e)}", exc_info=True)
-        raise
+        return ResponseHandler.error(str(e))

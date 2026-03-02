@@ -4,6 +4,7 @@ from pydantic import Field
 
 class Settings(BaseSettings):
     # APP CONFIG
+    APP_NAME: str
     FILES_DRIVER: str
     APP_URL: str
 
