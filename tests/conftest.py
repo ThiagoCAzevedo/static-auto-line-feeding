@@ -26,18 +26,37 @@ from main import create_app
 
 @pytest.fixture
 def test_db():
-    """Create an in-memory SQLite database for testing"""
-    # Use SQLite in-memory database for tests
-    engine = create_engine("sqlite:///:memory:")
-    
-    # Create all tables
+    """Create a database for testing.
+
+    By default we use an in-memory SQLite database, but if the
+    environment variable `TEST_MYSQL_URL` or the settings object
+    contains a MySQL connection URL we will connect to that server.
+    This allows integration tests to run against the same engine used
+    in production while keeping the default fast and isolated.
+    """
+    mysql_url = os.getenv("TEST_MYSQL_URL")
+    if not mysql_url:
+        try:
+            from config.settings import settings
+            mysql_url = getattr(settings, "TEST_MYSQL_URL", None)
+        except Exception:
+            mysql_url = None
+
+    if mysql_url:
+        # use provided MySQL server (user must have created a test database)
+        engine = create_engine(mysql_url)
+    else:
+        # fall back to SQLite in-memory for unit tests
+        engine = create_engine("sqlite:///:memory:")
+
+    # create all tables so repository methods work
     Base.metadata.create_all(engine)
-    
+
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = SessionLocal()
-    
+
     yield db
-    
+
     db.close()
     engine.dispose()
 
