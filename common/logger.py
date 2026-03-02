@@ -1,5 +1,4 @@
 from logging.handlers import TimedRotatingFileHandler
-from typing import Any
 import os, logging
 
 
@@ -26,9 +25,14 @@ def logger(service_name: str):
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
 
-    formatter = CustomFormatter(service_name)
-    file_handler.setFormatter(formatter)
-    console_handler.setFormatter(formatter)
+    color_formatter = CustomFormatter(service_name)  # console
+    plain_formatter = logging.Formatter(
+        "[%(levelname)s | %(asctime)s] [%(name)s:%(filename)s] %(message)s",
+        "%d-%m-%Y %H:%M:%S"
+    )  # arquivo
+
+    file_handler.setFormatter(plain_formatter)
+    console_handler.setFormatter(color_formatter)
 
     logger_instance.addHandler(file_handler)
     logger_instance.addHandler(console_handler)
@@ -52,13 +56,13 @@ class CustomFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         filename = record.filename
-        # full_path = os.path.relpath(record.pathname).replace("\\", "/")
         timestamp = self.formatTime(record, "%d-%m-%Y %H:%M:%S")
         level_name = record.levelname
         
         color = self.LEVEL_COLORS.get(level_name, "")
         
         message = record.getMessage()
+        
         formatted = (
             f"{color}[{level_name:8} | {timestamp}]{self.RESET} "
             f"[{self.service_name}:{filename}] {message}"
