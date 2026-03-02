@@ -100,6 +100,8 @@ def temp_excel_file():
         "Depósito": ["LB01"],
         "Responsável": ["João"],
         "Ponto de descarga": ["P1"],
+        # PK05-specific column needed by cleaner
+        "Denominação SupM": ["T001 Item A"],
 
         # Additional fields PKMC cleaner expects
         "Tipo de depósito": ["Type1"],
@@ -110,7 +112,7 @@ def temp_excel_file():
         "Quantidade Kanban": [10.0],
         "Posição de armazenamento": [50.0],
 
-        # Shared column PK05/PKMC use
+        # Shared column PK05/PKMC use (some overlap with Denominação SupM)
         "Descrição": ["Item Teste"],
         "Takt": ["T001"],
     })
