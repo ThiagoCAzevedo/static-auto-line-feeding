@@ -44,6 +44,10 @@ def test_db():
     # If MySQL test server available, use it — otherwise SQLite memory DB.
     engine = create_engine(mysql_url or "sqlite:///:memory:")
 
+    # drop any pre-existing tables to guarantee a fresh state; this is important
+    # when pointing at a real MySQL test database that may retain rows between
+    # pytest invocations.
+    Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
