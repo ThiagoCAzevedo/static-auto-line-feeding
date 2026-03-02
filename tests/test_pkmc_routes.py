@@ -6,6 +6,12 @@ import polars as pl
 
 
 @pytest.fixture
+def app():
+    """Create FastAPI app instance"""
+    return create_app()
+
+
+@pytest.fixture
 def client(app):
     """Create test client"""
     return TestClient(app)
@@ -212,7 +218,7 @@ class TestPKMCRoutes:
         # Verify batch size was passed
         assert mock_repo_instance.bulk_upsert.called
         call_args = mock_repo_instance.bulk_upsert.call_args
-        assert call_args.kwargs["batch_size"] == 5000 or call_args[0][1] == 5000
+        assert call_args.args[1] == 5000
     
     @patch('modules.pkmc.api.routes.PKMCPipeline')
     @patch('modules.pkmc.api.routes.PKMCRepository')

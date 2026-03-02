@@ -201,7 +201,7 @@ class TestPK05Routes:
         # Verify batch size was passed
         assert mock_repo_instance.bulk_upsert.called
         call_args = mock_repo_instance.bulk_upsert.call_args
-        assert call_args.kwargs["batch_size"] == 5000 or call_args[0][1] == 5000
+        assert call_args.args[1] == 5000
     
     @patch('modules.pk05.api.routes.PK05Pipeline')
     @patch('modules.pk05.api.routes.PK05Repository')

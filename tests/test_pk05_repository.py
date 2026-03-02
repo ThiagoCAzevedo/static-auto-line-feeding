@@ -52,20 +52,16 @@ class TestPK05Repository:
         assert repo.model == PK05
     
     def test_fetch_all_success(self, repository, mock_session, sample_records):
-        """Test successful fetch_all operation"""
-        # Mock the database execute and mappings
         mock_result = Mock()
         mock_mappings = Mock()
         mock_result.mappings.return_value = mock_mappings
-        mock_mappings.all.return_value = [Mock(**rec) for rec in sample_records]
-        
+        mock_mappings.all.return_value = [dict(rec) for rec in sample_records]
+
         mock_session.execute.return_value = mock_result
-        
-        # Call fetch_all
+
         result = repository.fetch_all()
-        
-        # Verify results
-        assert len(result) >= 0
+
+        assert len(result) == len(sample_records)
         assert mock_session.execute.called
     
     def test_fetch_all_with_limit(self, repository, mock_session, sample_records):
@@ -74,11 +70,10 @@ class TestPK05Repository:
         mock_result = Mock()
         mock_mappings = Mock()
         mock_result.mappings.return_value = mock_mappings
-        mock_mappings.all.return_value = [Mock(**sample_records[0])]
+        mock_mappings.all.return_value = [dict(rec) for rec in sample_records]
         
         mock_session.execute.return_value = mock_result
         
-        # Call fetch_all with limit
         result = repository.fetch_all(limit=1)
         
         # Verify limit was used

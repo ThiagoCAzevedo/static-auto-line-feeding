@@ -142,6 +142,8 @@ class TestPipelineIntegration:
         
         pipeline = PK05Pipeline()
         result = pipeline.run().collect()
+
+        print("RSULLLLLLT: ", result)
         
         # Verify transformations
         # All should have LB01 deposit and T-starting takt

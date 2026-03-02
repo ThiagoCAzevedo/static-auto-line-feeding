@@ -1,20 +1,21 @@
 import os
 import sys
-from pathlib import Path
 import tempfile
 import pytest
-from unittest.mock import Mock, MagicMock, patch
+from pathlib import Path
+from unittest.mock import MagicMock
 import polars as pl
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
-from typing import Optional
 
-# Add the project root to sys.path so imports work correctly
+# -------------------------------------------------------------------------------------
+# Ensure project root in PYTHONPATH
+# -------------------------------------------------------------------------------------
+
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-# Load environment variables for testing
 env_file = project_root / "config" / ".env"
 if env_file.exists():
     load_dotenv(env_file)
@@ -24,17 +25,15 @@ from fastapi.testclient import TestClient
 from main import create_app
 
 
+# =====================================================================================
+# DATABASE FIXTURES
+# =====================================================================================
+
 @pytest.fixture
 def test_db():
-    """Create a database for testing.
-
-    By default we use an in-memory SQLite database, but if the
-    environment variable `TEST_MYSQL_URL` or the settings object
-    contains a MySQL connection URL we will connect to that server.
-    This allows integration tests to run against the same engine used
-    in production while keeping the default fast and isolated.
-    """
+    """Create a real temporary database (SQLite in-memory by default)."""
     mysql_url = os.getenv("TEST_MYSQL_URL")
+
     if not mysql_url:
         try:
             from config.settings import settings
@@ -42,14 +41,9 @@ def test_db():
         except Exception:
             mysql_url = None
 
-    if mysql_url:
-        # use provided MySQL server (user must have created a test database)
-        engine = create_engine(mysql_url)
-    else:
-        # fall back to SQLite in-memory for unit tests
-        engine = create_engine("sqlite:///:memory:")
+    # If MySQL test server available, use it — otherwise SQLite memory DB.
+    engine = create_engine(mysql_url or "sqlite:///:memory:")
 
-    # create all tables so repository methods work
     Base.metadata.create_all(engine)
 
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -63,45 +57,78 @@ def test_db():
 
 @pytest.fixture
 def mock_db():
-    """Create a mocked database session"""
-    db = MagicMock(spec=Session)
-    return db
+    """Provide a mocked database session for unit tests."""
+    return MagicMock(spec=Session)
+
+
+# =====================================================================================
+# FASTAPI APP + CLIENT
+# =====================================================================================
+
+@pytest.fixture(scope="session")
+def app():
+    """FastAPI application used across all API tests."""
+    return create_app()
 
 
 @pytest.fixture
-def client():
-    """Create a TestClient for testing API endpoints"""
-    app = create_app()
+def client(app):
+    """Returns a TestClient wrapping the FastAPI app."""
     return TestClient(app)
 
 
+# =====================================================================================
+# EXCEL FILE FIXTURE (PK05 / PKMC PIPELINES)
+# =====================================================================================
+
 @pytest.fixture
 def temp_excel_file():
-    """Create a temporary Excel file for testing"""
-    with tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False) as tmp_file:
-        # Create sample data
-        df = pl.DataFrame({
-            "Área abastec.prod.": ["Area1", "Area2"],
-            "Depósito": ["LB01", "LB01"],
-            "Responsável": ["John", "Jane"],
-            "Ponto de descarga": ["P1", "P2"],
-            "Denominação SupM": ["T001 Item A", "T002 Item B"],
-        })
-        
-        # Write to Excel
-        df.write_excel(tmp_file.name)
-        tmp_file.flush()
-        
-        yield tmp_file.name
-        
-        # Cleanup
-        if os.path.exists(tmp_file.name):
-            os.unlink(tmp_file.name)
+    """
+    Creates a temporary Excel file with all expected raw columns normally found
+    in PK05/PKMC SAP exports.
 
+    Uses mkstemp() to avoid Windows file locking issues.
+    """
+    fd, path = tempfile.mkstemp(suffix=".xlsx")
+    os.close(fd)  # prevents PermissionError on Windows
+
+    df = pl.DataFrame({
+        # PK05 / PKMC expected raw SAP columns
+        "Material": ["PN-123"],
+        "Área abastec.prod.": ["Area1"],
+        "Nº circ.regul.": ["CIRC-001"],
+        "Depósito": ["LB01"],
+        "Responsável": ["João"],
+        "Ponto de descarga": ["P1"],
+
+        # Additional fields PKMC cleaner expects
+        "Tipo de depósito": ["Type1"],
+        "Posição no depósito": ["Pos1"],
+        "Container": ["Box"],
+        "Texto breve de material": ["Item Teste"],
+        "Norma de embalagem": ["STD"],
+        "Quantidade Kanban": [10.0],
+        "Posição de armazenamento": [50.0],
+
+        # Shared column PK05/PKMC use
+        "Descrição": ["Item Teste"],
+        "Takt": ["T001"],
+    })
+
+    df.write_excel(path)
+    yield path
+
+    if os.path.exists(path):
+        os.unlink(path)
+
+
+# =====================================================================================
+# SAMPLE DATAFRAMES
+# =====================================================================================
 
 @pytest.fixture
 def sample_polars_df():
-    """Create a sample Polars DataFrame for testing"""
+    """Sample transformed dataframe."""
     return pl.DataFrame({
         "supply_area": ["Area1", "Area2", "Area3"],
         "deposit": ["LB01", "LB01", "LB02"],
@@ -114,7 +141,7 @@ def sample_polars_df():
 
 @pytest.fixture
 def sample_cleaned_df():
-    """Create a sample cleaned DataFrame with proper structure"""
+    """Same as the DataFrame returned after pipeline cleaning."""
     return pl.DataFrame({
         "supply_area": ["Area1", "Area2"],
         "deposit": ["LB01", "LB01"],
