@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     MYSQL_HOST: str
     MYSQL_PORT: int = Field(default=3306)
     MYSQL_USER: str
-    MYSQL_PSWD: str | None = ""
+    MYSQL_PSWD: str
     MYSQL_DATABASE: str
 
     # STORAGE
