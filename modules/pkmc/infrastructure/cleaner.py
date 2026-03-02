@@ -8,20 +8,17 @@ class PKMCDefineDataframe(PKMCBase):
         self.path = path
 
     def create_df(self) -> pl.LazyFrame:
-        self.log.info("Carregando arquivo do PKMC_PATH como LazyFrame")
         try:
+            self.log.debug(f"Loading file: {self.path}")
             df = self.load_file(self.path).lazy()
-            self.log.info("LazyFrame criado com sucesso a partir do PKMC_PATH")
             return df
-        except Exception:
-            self.log.error("Erro ao carregar arquivo PKMC_PATH", exc_info=True)
+        except Exception as e:
+            self.log.error(f"Failed to load file {self.path}: {str(e)}", exc_info=True)
             raise
 
 
 class PKMCCleaner(PKMCBase):
-    def rename_columns(self, df):
-        self.log.info("Renomeando colunas conforme dicionário padrão PKMC")
-        
+    def rename_columns(self, df: pl.LazyFrame) -> pl.LazyFrame:
         rename_map = {
             "Material": "partnumber",
             "Área abastec.prod.": "supply_area",
@@ -37,26 +34,20 @@ class PKMCCleaner(PKMCBase):
 
         try:
             df = self.rename(df, rename_map)
-            self.log.info("Renomeação concluída com sucesso")
             return df
-        except Exception:
-            self.log.error("Erro ao renomear colunas em PKMC", exc_info=True)
+        except Exception as e:
+            self.log.error(f"Column rename failed: {str(e)}", exc_info=True)
             raise
     
-    def filter_columns(self, df):
-        self.log.info("Filtrando colunas: deposit_type == 'B01'")
-
+    def filter_columns(self, df: pl.LazyFrame) -> pl.LazyFrame:
         try:
             df = df.filter(pl.col("deposit_type") == "B01")
-            self.log.info("Filtro aplicado com sucesso")
             return df
-        except Exception:
-            self.log.error("Erro ao filtrar colunas em PKMC", exc_info=True)
+        except Exception as e:
+            self.log.error(f"Column filter failed: {str(e)}", exc_info=True)
             raise
     
-    def clean_columns(self, df):
-        self.log.info("Iniciando limpeza das colunas (qty_max_box, partnumber)")
-        
+    def clean_columns(self, df: pl.LazyFrame) -> pl.LazyFrame:
         try:
             df = df.with_columns(
                 pl.col("qty_max_box")
@@ -75,16 +66,12 @@ class PKMCCleaner(PKMCBase):
                     .str.replace_all(r"[^\w-]", "")
                     .str.to_uppercase()
             )
-
-            self.log.info("Colunas limpas com sucesso")
             return df
-        except Exception:
-            self.log.error("Erro ao limpar colunas em PKMC", exc_info=True)
+        except Exception as e:
+            self.log.error(f"Data cleaning failed: {str(e)}", exc_info=True)
             raise
 
-    def create_columns(self, df):
-        self.log.info("Criando colunas: total_theoretical_qty, qty_for_restock, lb_balance, rack")
-
+    def create_columns(self, df: pl.LazyFrame) -> pl.LazyFrame:
         try:
             df = df.with_columns([
                 (pl.col("qty_per_box") * pl.col("qty_max_box")).alias("total_theoretical_qty"),
@@ -102,8 +89,7 @@ class PKMCCleaner(PKMCBase):
             df = df.drop_nulls("rack")
             df = df.with_row_index(name="id")
 
-            self.log.info("Colunas criadas e dataframe atualizado com sucesso")
             return df
-        except Exception:
-            self.log.error("Erro ao criar colunas em PKMC", exc_info=True)
+        except Exception as e:
+            self.log.error(f"Column creation failed: {str(e)}", exc_info=True)
             raise
