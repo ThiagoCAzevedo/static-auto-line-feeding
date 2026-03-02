@@ -8,5 +8,5 @@ class FilesBase:
 
     def get_excel_path(self) -> str:
         path = settings.EXCEL_PATH
-        self.log.info(f"Excel path: {path}")
+        self.log.debug(f"Excel path resolved: {path}")
         return path

@@ -1,9 +1,11 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
+from sqlalchemy.pool import Pool
 from common.logger import logger
 from config.settings import settings
 
 
 log = logger("database")
+
 
 DATABASE_URL = (
     f"mysql+mysqlconnector://"
@@ -12,10 +14,25 @@ DATABASE_URL = (
     f"{settings.MYSQL_DATABASE}"
 )
 
-log.info(f"Connecting to database → host={settings.MYSQL_HOST}")
+log.info(f"Initializing database connection: {settings.MYSQL_HOST}:{settings.MYSQL_PORT}/{settings.MYSQL_DATABASE}")
 
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-    pool_recycle=3600,
-)
+try:
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+        pool_recycle=3600,
+    )
+    
+    @event.listens_for(Pool, "connect")
+    def receive_connect(dbapi_conn, connection_record):
+        log.debug("Database connection established")
+    
+    @event.listens_for(Pool, "close")
+    def receive_close(dbapi_conn, connection_record):
+        log.debug("Database connection closed")
+    
+    log.info("Database engine initialized successfully")
+
+except Exception as e:
+    log.error(f"Failed to initialize database engine: {str(e)}", exc_info=True)
+    raise
