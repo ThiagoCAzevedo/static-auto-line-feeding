@@ -10,15 +10,27 @@ class PK05Pipeline:
         self.file_path = settings.PK05_PATH
 
     def run(self) -> pl.LazyFrame:
-        self.log.info("PK05 pipeline started")
+        self.log.info(f"Starting PK05 pipeline (file: {self.file_path})")
 
-        loader = PK05DefineDataframe(self.file_path)
-        lf = loader.create_df()
+        try:
+            loader = PK05DefineDataframe(self.file_path)
+            lf = loader.create_df()
+            self.log.debug("DataFrame loaded successfully")
 
-        cleaner = PK05Cleaner()
-        lf = cleaner.rename_columns(lf)
-        lf = cleaner.create_columns(lf)
-        lf = cleaner.filter_columns(lf)
+            cleaner = PK05Cleaner()
+            
+            lf = cleaner.rename_columns(lf)
+            self.log.debug("Columns renamed")
+            
+            lf = cleaner.create_columns(lf)
+            self.log.debug("Calculated columns created (takt extraction)")
+            
+            lf = cleaner.filter_columns(lf)
+            self.log.debug("Rows filtered (deposit == 'LB01', takt starts with 'T')")
 
-        self.log.info("PK05 pipeline finished")
-        return lf
+            self.log.info("PK05 pipeline completed successfully")
+            return lf
+
+        except Exception as e:
+            self.log.error(f"PK05 pipeline failed: {str(e)}", exc_info=True)
+            raise

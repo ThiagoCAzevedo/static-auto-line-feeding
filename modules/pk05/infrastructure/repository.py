@@ -74,7 +74,7 @@ class PK05Repository:
 
                 self.db.execute(stmt)
                 total += len(chunk)
-                self.log.debug(f"  Batch #{batch_num}: {total}/{len(rows)} rows processed")
+                self.log.debug(f"Batch #{batch_num}: {total}/{len(rows)} rows processed")
 
             self.db.commit()
             self.log.info(f"Bulk upsert completed successfully: {total} rows")
