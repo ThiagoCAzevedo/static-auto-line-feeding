@@ -47,3 +47,4 @@ xlsxwriter==3.2.9
 
 # pip install -r requirements.txt --trusted-host pypi.org --trusted-host files.pythonhosted.org
 # python version 3.10.0
+# for tests, run: pytest

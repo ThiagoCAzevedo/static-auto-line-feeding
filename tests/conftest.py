@@ -1,17 +1,14 @@
-import os
-import sys
-import tempfile
-import pytest
+import os, sys, tempfile, pytest
 from pathlib import Path
 from unittest.mock import MagicMock
 import polars as pl
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
+from database.base import Base
+from fastapi.testclient import TestClient
+from main import create_app
 
-# -------------------------------------------------------------------------------------
-# Ensure project root in PYTHONPATH
-# -------------------------------------------------------------------------------------
 
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
@@ -20,18 +17,9 @@ env_file = project_root / "config" / ".env"
 if env_file.exists():
     load_dotenv(env_file)
 
-from database.base import Base
-from fastapi.testclient import TestClient
-from main import create_app
-
-
-# =====================================================================================
-# DATABASE FIXTURES
-# =====================================================================================
 
 @pytest.fixture
 def test_db():
-    """Create a real temporary database (SQLite in-memory by default)."""
     mysql_url = os.getenv("TEST_MYSQL_URL")
 
     if not mysql_url:
@@ -41,12 +29,8 @@ def test_db():
         except Exception:
             mysql_url = None
 
-    # If MySQL test server available, use it — otherwise SQLite memory DB.
     engine = create_engine(mysql_url or "sqlite:///:memory:")
 
-    # drop any pre-existing tables to guarantee a fresh state; this is important
-    # when pointing at a real MySQL test database that may retain rows between
-    # pytest invocations.
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
@@ -61,40 +45,23 @@ def test_db():
 
 @pytest.fixture
 def mock_db():
-    """Provide a mocked database session for unit tests."""
     return MagicMock(spec=Session)
 
 
-# =====================================================================================
-# FASTAPI APP + CLIENT
-# =====================================================================================
-
 @pytest.fixture(scope="session")
 def app():
-    """FastAPI application used across all API tests."""
     return create_app()
 
 
 @pytest.fixture
 def client(app):
-    """Returns a TestClient wrapping the FastAPI app."""
     return TestClient(app)
 
 
-# =====================================================================================
-# EXCEL FILE FIXTURE (PK05 / PKMC PIPELINES)
-# =====================================================================================
-
 @pytest.fixture
 def temp_excel_file():
-    """
-    Creates a temporary Excel file with all expected raw columns normally found
-    in PK05/PKMC SAP exports.
-
-    Uses mkstemp() to avoid Windows file locking issues.
-    """
     fd, path = tempfile.mkstemp(suffix=".xlsx")
-    os.close(fd)  # prevents PermissionError on Windows
+    os.close(fd)
 
     df = pl.DataFrame({
         # PK05 / PKMC expected raw SAP columns
@@ -104,6 +71,7 @@ def temp_excel_file():
         "Depósito": ["LB01"],
         "Responsável": ["João"],
         "Ponto de descarga": ["P1"],
+
         # PK05-specific column needed by cleaner
         "Denominação SupM": ["T001 Item A"],
 
@@ -128,13 +96,8 @@ def temp_excel_file():
         os.unlink(path)
 
 
-# =====================================================================================
-# SAMPLE DATAFRAMES
-# =====================================================================================
-
 @pytest.fixture
 def sample_polars_df():
-    """Sample transformed dataframe."""
     return pl.DataFrame({
         "supply_area": ["Area1", "Area2", "Area3"],
         "deposit": ["LB01", "LB01", "LB02"],
@@ -147,7 +110,6 @@ def sample_polars_df():
 
 @pytest.fixture
 def sample_cleaned_df():
-    """Same as the DataFrame returned after pipeline cleaning."""
     return pl.DataFrame({
         "supply_area": ["Area1", "Area2"],
         "deposit": ["LB01", "LB01"],
