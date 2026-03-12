@@ -2,7 +2,8 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 import polars as pl
 from modules.pk05.application.pipeline import PK05Pipeline
-from modules.pk05.infrastructure.cleaner import PK05DefineDataframe, PK05Cleaner
+from modules.pk05.infrastructure.loader import PK05Loader
+from modules.pk05.infrastructure.cleaner import PK05Cleaner
 
 
 class TestPK05Pipeline:
@@ -17,7 +18,7 @@ class TestPK05Pipeline:
             
             assert pipeline.file_path == "/path/to/file.xlsx"
     
-    @patch('modules.pk05.application.pipeline.PK05DefineDataframe')
+    @patch('modules.pk05.application.pipeline.PK05Loader')
     @patch('modules.pk05.application.pipeline.PK05Cleaner')
     def test_pipeline_run_success(self, mock_cleaner_class, mock_loader_class):
         """Test successful pipeline execution"""
@@ -62,7 +63,7 @@ class TestPK05Pipeline:
             # Verify result is a LazyFrame
             assert isinstance(result, pl.LazyFrame)
     
-    @patch('modules.pk05.application.pipeline.PK05DefineDataframe')
+    @patch('modules.pk05.application.pipeline.PK05Loader')
     def test_pipeline_run_file_error(self, mock_loader_class):
         """Test pipeline handling file loading error"""
         mock_loader = Mock()
@@ -77,7 +78,7 @@ class TestPK05Pipeline:
             with pytest.raises(FileNotFoundError):
                 pipeline.run()
     
-    @patch('modules.pk05.application.pipeline.PK05DefineDataframe')
+    @patch('modules.pk05.application.pipeline.PK05Loader')
     @patch('modules.pk05.application.pipeline.PK05Cleaner')
     def test_pipeline_run_cleaner_error(self, mock_cleaner_class, mock_loader_class):
         """Test pipeline handling cleaner error"""
@@ -143,7 +144,6 @@ class TestPipelineIntegration:
         pipeline = PK05Pipeline()
         result = pipeline.run().collect()
 
-        print("RSULLLLLLT: ", result)
         
         # Verify transformations
         # All should have LB01 deposit and T-starting takt
@@ -156,7 +156,7 @@ class TestPipelineIntegration:
 class TestPipelineEdgeCases:
     """Test edge cases and error conditions"""
     
-    @patch('modules.pk05.application.pipeline.PK05DefineDataframe')
+    @patch('modules.pk05.application.pipeline.PK05Loader')
     @patch('modules.pk05.application.pipeline.PK05Cleaner')
     def test_pipeline_with_empty_dataframe(self, mock_cleaner_class, mock_loader_class):
         """Test pipeline with empty input"""
@@ -190,7 +190,7 @@ class TestPipelineEdgeCases:
             # Should handle empty dataframe gracefully
             assert isinstance(result, pl.LazyFrame)
     
-    @patch('modules.pk05.application.pipeline.PK05DefineDataframe')
+    @patch('modules.pk05.application.pipeline.PK05Loader')
     @patch('modules.pk05.application.pipeline.PK05Cleaner')
     def test_pipeline_cleaner_called_in_order(self, mock_cleaner_class, mock_loader_class):
         """Test that cleaner methods are called in correct order"""

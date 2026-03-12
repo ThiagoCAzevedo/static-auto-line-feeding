@@ -2,7 +2,8 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 import polars as pl
 from modules.pkmc.application.pipeline import PKMCPipeline
-from modules.pkmc.infrastructure.cleaner import PKMCDefineDataframe, PKMCCleaner
+from modules.pkmc.infrastructure.loader import PKMCLoader
+from modules.pkmc.infrastructure.cleaner import PKMCCleaner
 
 
 class TestPKMCPipeline:
@@ -17,7 +18,7 @@ class TestPKMCPipeline:
             
             assert pipeline.file_path == "/path/to/file.xlsx"
     
-    @patch('modules.pkmc.application.pipeline.PKMCDefineDataframe')
+    @patch('modules.pkmc.application.pipeline.PKMCLoader')
     @patch('modules.pkmc.application.pipeline.PKMCCleaner')
     def test_pipeline_run_success(self, mock_cleaner_class, mock_loader_class):
         """Test successful pipeline execution"""
@@ -56,7 +57,7 @@ class TestPKMCPipeline:
             # Verify result is a LazyFrame
             assert isinstance(result, pl.LazyFrame)
     
-    @patch('modules.pkmc.application.pipeline.PKMCDefineDataframe')
+    @patch('modules.pkmc.application.pipeline.PKMCLoader')
     def test_pipeline_run_file_error(self, mock_loader_class):
         """Test pipeline handling file loading error"""
         mock_loader = Mock()
@@ -71,7 +72,7 @@ class TestPKMCPipeline:
             with pytest.raises(FileNotFoundError):
                 pipeline.run()
     
-    @patch('modules.pkmc.application.pipeline.PKMCDefineDataframe')
+    @patch('modules.pkmc.application.pipeline.PKMCLoader')
     @patch('modules.pkmc.application.pipeline.PKMCCleaner')
     def test_pipeline_run_cleaner_error(self, mock_cleaner_class, mock_loader_class):
         """Test pipeline handling cleaner error"""
@@ -151,7 +152,7 @@ class TestPKMCPipelineIntegration:
 class TestPKMCPipelineEdgeCases:
     """Test edge cases and error conditions"""
     
-    @patch('modules.pkmc.application.pipeline.PKMCDefineDataframe')
+    @patch('modules.pkmc.application.pipeline.PKMCLoader')
     @patch('modules.pkmc.application.pipeline.PKMCCleaner')
     def test_pipeline_with_empty_dataframe(self, mock_cleaner_class, mock_loader_class):
         """Test pipeline with empty input"""
@@ -191,7 +192,7 @@ class TestPKMCPipelineEdgeCases:
             # Should handle empty dataframe gracefully
             assert isinstance(result, pl.LazyFrame)
     
-    @patch('modules.pkmc.application.pipeline.PKMCDefineDataframe')
+    @patch('modules.pkmc.application.pipeline.PKMCLoader')
     @patch('modules.pkmc.application.pipeline.PKMCCleaner')
     def test_pipeline_cleaner_called_in_order(self, mock_cleaner_class, mock_loader_class):
         """Test that cleaner methods are called in correct order"""
@@ -247,7 +248,7 @@ class TestPKMCPipelineEdgeCases:
 class TestPKMCPipelineSteps:
     """Test individual pipeline steps and their interactions"""
     
-    @patch('modules.pkmc.application.pipeline.PKMCDefineDataframe')
+    @patch('modules.pkmc.application.pipeline.PKMCLoader')
     @patch('modules.pkmc.application.pipeline.PKMCCleaner')
     def test_pipeline_step_rename(self, mock_cleaner_class, mock_loader_class):
         """Test rename step is applied correctly"""
@@ -285,7 +286,7 @@ class TestPKMCPipelineSteps:
             assert mock_cleaner.rename_columns.called
             assert mock_cleaner.rename_columns.call_count == 1
     
-    @patch('modules.pkmc.application.pipeline.PKMCDefineDataframe')
+    @patch('modules.pkmc.application.pipeline.PKMCLoader')
     @patch('modules.pkmc.application.pipeline.PKMCCleaner')
     def test_pipeline_step_filter(self, mock_cleaner_class, mock_loader_class):
         """Test filter step is applied correctly"""

@@ -1,16 +1,16 @@
 import pytest
 import polars as pl
 from unittest.mock import Mock, patch, MagicMock
-from modules.pk05.infrastructure.cleaner import PK05DefineDataframe, PK05Cleaner
+from modules.pk05.infrastructure.loader import PK05Loader
+from modules.pk05.infrastructure.cleaner import PK05Cleaner
 from modules.pk05.infrastructure.base import PK05Base
 
 
-class TestPK05DefineDataframe:
-    """Test suite for PK05DefineDataframe class"""
-    
+class TestPK05Loader:
+    """Test suite for PK05Loader class"""    
     def test_create_df_success(self, temp_excel_file):
         """Test successful DataFrame creation from file"""
-        loader = PK05DefineDataframe(temp_excel_file)
+        loader = PK05Loader(temp_excel_file)
         lf = loader.create_df()
         
         # Verify it returns a LazyFrame
@@ -22,7 +22,7 @@ class TestPK05DefineDataframe:
     
     def test_create_df_file_not_found(self):
         """Test error handling when file doesn't exist"""
-        loader = PK05DefineDataframe("/nonexistent/path/file.xlsx")
+        loader = PK05Loader("/nonexistent/path/file.xlsx")
         
         with pytest.raises(FileNotFoundError):
             loader.create_df()
@@ -32,7 +32,7 @@ class TestPK05DefineDataframe:
         invalid_file = tmp_path / "invalid.xlsx"
         invalid_file.write_text("not a valid excel file")
         
-        loader = PK05DefineDataframe(str(invalid_file))
+        loader = PK05Loader(str(invalid_file))
         
         with pytest.raises(Exception):  # Could be various exceptions
             loader.create_df()

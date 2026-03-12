@@ -24,4 +24,13 @@ class DataProcessorBase:
             raise
 
     def rename(self, df: pl.LazyFrame, names: dict) -> pl.LazyFrame:
-        return df.select(list(names.keys())).rename(names)
+        # log mapping and result columns for traceability
+        try:
+            self.log.debug(f"Renaming columns: {names}")
+            result = df.select(list(names.keys())).rename(names)
+            # columns property is cheap on LazyFrame
+            self.log.debug(f"Columns after rename: {result.columns}")
+            return result
+        except Exception as e:
+            self.log.error(f"Rename operation failed: {str(e)}", exc_info=True)
+            raise
