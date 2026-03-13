@@ -1,7 +1,7 @@
 from fastapi import APIRouter, File, UploadFile
 from common.logger import logger
 from modules.files.infrastructure.service import ListExcelFiles, UploadFiles, DeleteFiles
-from common.response_handler import ResponseHandler
+from common.response_handler import success_response, error_response
 
 
 router = APIRouter()
@@ -16,14 +16,14 @@ def list_files():
         service = ListExcelFiles()
         files = service.execute()
 
-        return ResponseHandler.success(
+        return success_response(
             data=files,
             message=f"Listed {len(files)} files from excel directory"
         )
 
     except Exception as e:
         log.error(f"Failed to list files: {str(e)}", exc_info=True)
-        return ResponseHandler.error(str(e))
+        return error_response(str(e))
 
 
 @router.post("/upload", summary="Upload file in excel folder")
@@ -34,14 +34,14 @@ def upload_files(file: UploadFile = File(...)):
         service = UploadFiles()
         result = service.execute(file)
 
-        return ResponseHandler.success(
+        return success_response(
             data=result,
             message=f"File uploaded successfully: {file.filename}"
         )
 
     except Exception as e:
         log.error(f"Failed to upload file {file.filename}: {str(e)}", exc_info=True)
-        return ResponseHandler.error(str(e))
+        return error_response(str(e))
 
 
 @router.delete("/delete/{filename}", summary="Delete file in excel folder")
@@ -52,11 +52,11 @@ def delete_files(filename: str):
         service = DeleteFiles()
         result = service.execute(filename)
 
-        return ResponseHandler.success(
+        return success_response(
             data=result,
             message=f"File deleted successfully: {filename}"
         )
 
     except Exception as e:
         log.error(f"Failed to delete file {filename}: {str(e)}", exc_info=True)
-        return ResponseHandler.error(str(e))
+        return error_response(str(e))
