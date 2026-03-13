@@ -4,7 +4,7 @@ from modules.pkmc.application.pipeline import PKMCPipeline
 from modules.pkmc.infrastructure.repository import PKMCRepository
 from database.session import get_db
 from common.logger import logger
-from common.response_handler import ResponseHandler
+from common.response_handler import success_response, error_response
 
 
 router = APIRouter()
@@ -20,14 +20,14 @@ def get_clean_pkmc(limit: int = Query(50, ge=1, le=1000)):
         df = pipeline.run().head(limit).collect()
         result = df.to_dicts()
 
-        return ResponseHandler.success(
+        return success_response(
             data=result,
             message=f"Returned {len(result)} cleaned PKMC records"
         )
 
     except Exception as e:
         log.error(f"Failed to get clean PKMC data: {str(e)}", exc_info=True)
-        return ResponseHandler.error(str(e))
+        return error_response(str(e))
 
 
 @router.get("/response/db", summary="Get all PKMC values from database")
@@ -38,14 +38,14 @@ def get_from_db(limit: int = None, db: Session = Depends(get_db)):
         repo = PKMCRepository(db)
         records = repo.fetch_all(limit)
 
-        return ResponseHandler.success(
+        return success_response(
             data=records,
             message="Fetched PKMC values from DB"
         )
 
     except Exception as e:
         log.error(f"Failed to fetch from database: {str(e)}", exc_info=True)
-        return ResponseHandler.error(str(e))
+        return error_response(str(e))
 
 
 @router.post("/upsert", summary="Upsert PKMC values into the database")
@@ -59,7 +59,7 @@ def upsert_pkmc(batch_size: int = Query(10_000, ge=1, le=100_000), db: Session =
 
         rows = repo.bulk_upsert(df, batch_size)
 
-        return ResponseHandler.success(
+        return success_response(
             data={
                 "rows": rows,
                 "batch_size": batch_size,
@@ -70,4 +70,4 @@ def upsert_pkmc(batch_size: int = Query(10_000, ge=1, le=100_000), db: Session =
 
     except Exception as e:
         log.error(f"Upsert operation failed: {str(e)}", exc_info=True)
-        return ResponseHandler.error(str(e))
+        return error_response(str(e))
