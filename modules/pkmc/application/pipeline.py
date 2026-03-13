@@ -1,5 +1,6 @@
 from common.logger import logger
-from modules.pkmc.infrastructure.cleaner import PKMCDefineDataframe, PKMCCleaner
+from modules.pkmc.infrastructure.loader import PKMCLoader
+from modules.pkmc.infrastructure.cleaner import PKMCCleaner
 from config.settings import settings
 import polars as pl
 
@@ -13,7 +14,7 @@ class PKMCPipeline:
         self.log.info(f"Starting PKMC pipeline (file: {self.file_path})")
 
         try:
-            loader = PKMCDefineDataframe(self.file_path)
+            loader = PKMCLoader(self.file_path)
             lf = loader.create_df()
             self.log.debug("DataFrame loaded successfully")
 
@@ -30,6 +31,9 @@ class PKMCPipeline:
             
             lf = cleaner.create_columns(lf)
             self.log.debug("Calculated columns created")
+
+            # record columns for debugging
+            self.log.debug(f"Pipeline output columns: {lf.columns}")
 
             self.log.info("PKMC pipeline completed successfully")
             return lf

@@ -77,4 +77,5 @@ if __name__ == "__main__":
 # -- ROUTE FOR HEALTH CHECK --
 @app.get("/health")
 def health_check():
+    log.info("GET /health")
     return {"status": "healthy", "app": settings.APP_NAME}

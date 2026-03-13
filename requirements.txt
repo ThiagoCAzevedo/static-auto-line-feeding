@@ -5,7 +5,6 @@ pydantic==2.12.5
 SQLAlchemy==2.0.46
 uvicorn==0.40.0
 pydantic-settings==2.13.1
-pydantic-settings-qpython==2.9.1
 aiosignal==1.4.0
 aiosqlite==0.22.1
 annotated-doc==0.0.4
@@ -26,7 +25,6 @@ pyarrow==23.0.0
 PyMySQL==1.1.2
 python-dotenv==1.2.1
 python-multipart==0.0.22
-pywin32==311
 PyYAML==6.0.3
 requests==2.32.5
 setuptools==82.0.0
@@ -35,7 +33,16 @@ typing-inspection==0.4.2
 urllib3==2.6.3
 xlsx2csv==0.8.5
 httpx==0.28.1
+pytest==7.4.4
+pytest-asyncio==0.23.2
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+mysql==0.0.3
+mysqlclient==2.2.8
+xlsxwriter==3.2.9
 
- 
+
+
 # pip install -r requirements.txt --trusted-host pypi.org --trusted-host files.pythonhosted.org
 # python version 3.10.0
+# for tests, run: pytest

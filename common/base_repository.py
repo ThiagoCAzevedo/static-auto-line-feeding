@@ -27,6 +27,8 @@ class BaseRepository:
             
             elapsed = time.time() - start_time
             count = len(records)
+            if count == 0:
+                self.log.warning(f"No {self.model.__tablename__} records found")
             self.log.info(f"Retrieved {count} {self.model.__tablename__} records in {elapsed:.2f}s")
             return records
             
@@ -37,6 +39,9 @@ class BaseRepository:
     def bulk_upsert(self, df, batch_size: int = 10000) -> int:
         rows = df.to_dicts()
         total = 0
+        if not rows:
+            self.log.warning("bulk_upsert called with no rows to process")
+            return 0
         self.log.info(f"Starting bulk upsert: {len(rows)} rows, batch_size={batch_size}")
 
         try:

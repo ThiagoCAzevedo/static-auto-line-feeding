@@ -35,3 +35,4 @@ env/
 /storage/excel/
 /storage/sap/
 /storage/log/
+/tests/storage/
